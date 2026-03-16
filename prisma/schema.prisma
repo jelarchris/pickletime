@@ -1,0 +1,62 @@
+// --- PRISMA SETUP (The Engine & Database Connection) ---
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------
+// THE PICKLETIME DATABASE BLUEPRINT
+// ------------------------------------------------------
+
+// 1. THE PLAYERS
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  skillLevel    String?   
+  createdAt     DateTime  @default(now())
+  
+  bookings      Booking[] 
+}
+
+// 2. THE LOCATIONS
+model Club {
+  id            String    @id @default(cuid())
+  name          String
+  location      String
+  
+  sessions      Session[] 
+}
+
+// 3. THE EVENTS
+model Session {
+  id            String    @id @default(cuid())
+  title         String
+  date          DateTime
+  level         String    
+  totalSlots    Int       
+  price         Float?    
+  
+  clubId        String
+  club          Club      @relation(fields: [clubId], references: [id])
+  bookings      Booking[]
+}
+
+// 4. THE RECEIPTS
+model Booking {
+  id            String    @id @default(cuid())
+  status        String    @default("CONFIRMED") 
+  createdAt     DateTime  @default(now())
+  
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  
+  sessionId     String
+  session       Session   @relation(fields: [sessionId], references: [id])
+
+  @@unique([userId, sessionId]) 
+}
